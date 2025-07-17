@@ -13,8 +13,8 @@ const bodyParser = async (request:FastifyRequest):Promise<ParsedFields> => {
             fields[part.fieldname] = 'dummy/folder/path';
         } else {
             try {
-                if (typeof part?.value === "string") {
-                    fields[part.fieldname] = JSON.parse(part.value);
+                if (fields[part.fieldname] === "workouts") {
+                    fields[part.fieldname] = JSON.parse(`${part.value}`);
                 } else {
                     fields[part.fieldname] = part.value;
                 }

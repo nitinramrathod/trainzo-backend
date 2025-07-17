@@ -2,11 +2,23 @@ import UserModel from "../models/user.model";
 import { FastifyRequest, FastifyReply } from "fastify";
 import { validateUser } from "../validation-schema/user.validation";
 import bodyParser from "../helper/common/bodyParser";
+import { formatHumanDate } from "../helper/formatHumanDate";
 
 async function getAll(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const users = await UserModel.find().sort({ createdAt: -1 }); // newest first
-    reply.send({ users });
+    const users = await UserModel.find()
+      .populate('gym_package', 'name')
+      .sort({ createdAt: -1 }); // newest first
+
+    const transformedUsers = users.map((user: any) => ({
+      ...user.toObject(),
+      joining_date: {
+        raw: user.joining_date,
+        formatted: formatHumanDate(user.joining_date, 'fullDateTime'),
+      },
+    }));
+
+    reply.send({ users: transformedUsers });
   } catch (err) {
     reply.status(500).send({ error: "Failed to fetch users", details: err });
   }
@@ -34,6 +46,7 @@ async function create(request: FastifyRequest, reply: FastifyReply) {
       paid_fees,
       joining_date,
       expiry_date,
+      role
     } = fields;
 
     let isValid = await validateUser(fields, reply);
@@ -68,6 +81,7 @@ async function create(request: FastifyRequest, reply: FastifyReply) {
       paid_fees,
       joining_date,
       expiry_date,
+      role
     });
 
     reply.status(201).send({

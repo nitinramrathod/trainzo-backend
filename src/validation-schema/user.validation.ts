@@ -5,7 +5,20 @@ import handleValidationError from "../helper/validation/validationErrorMessage";
 const userSchema = Joi.object({
   name: Joi.string().required(),
   email: Joi.string().email().required(),
-  contact: Joi.string().required(),
+  contact: Joi.string()
+      .required()
+      .pattern(/^\d+$/)
+      .min(6)
+      .max(20)
+      .empty("")
+      .messages({
+        "string.base": 'Contact number should be string',
+        "any.required": 'Contact number should is required',
+        "string.empty": 'Contact number should not be empty',
+        "string.pattern.base": "Contact Number must contain only digits",
+        "string.min": "Contact number must be at least 6 digits long",
+        "string.max": "Contact number must not exceed 20 digits",
+      }),
   dob: Joi.date()
       .iso()
       .empty("")
@@ -18,12 +31,12 @@ const userSchema = Joi.object({
         "any.required": "Joining date is required",
       }),
   address: Joi.string().required(),
-  gender: Joi.string().valid("Male", "Female", "Other").required(),
+  gender: Joi.string().valid("male", "female", "other").required(),
   role: Joi.string().valid("admin", "user", "trainer").required(),
   photo: Joi.string().optional(),
   joining_date: Joi.date().optional(),
   expiry_date: Joi.date().optional(),
-  gym_package: Joi.date().optional(),
+  gym_package: Joi.string().required(),
   workout_package: Joi.string().optional(),
   paid_fees: Joi.number().optional(),
 }).unknown(true);

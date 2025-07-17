@@ -7,7 +7,7 @@ import { validateWorkout } from "../validation-schema/workout.validation";
 async function getAll(request: FastifyRequest, reply: FastifyReply) {
   try {
     const workouts = await WorkoutModel.find().sort({ createdAt: -1 }); // newest first
-    reply.send({ workouts });
+    reply.send({ data:workouts });
   } catch (err) {
     reply.status(500).send({ error: "Failed to fetch workouts", details: err });
   }

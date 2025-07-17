@@ -6,7 +6,7 @@ import { validateMembership } from "../validation-schema/membership.validation";
 async function getAll(request: FastifyRequest, reply: FastifyReply) {
   try {
     const memberships = await MembershipModel.find().sort({ createdAt: -1 }); // newest first
-    reply.send({ memberships });
+    reply.send({ data: memberships });
   } catch (err) {
     reply.status(500).send({ error: "Failed to fetch membership", details: err });
   }

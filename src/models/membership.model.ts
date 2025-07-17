@@ -7,7 +7,7 @@ const membershipSchema = new Schema<TMembership>(
     description: { type: String, required: true },
     duration: { type: Number, required: true },
     price: { type: Number, required: true },
-    discount_price: { type: String}
+    discount_price: { type: Number}
   },
   { timestamps: true }
 );
