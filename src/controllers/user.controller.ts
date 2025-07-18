@@ -3,22 +3,67 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { validateUser } from "../validation-schema/user.validation";
 import bodyParser from "../helper/common/bodyParser";
 import { formatHumanDate } from "../helper/formatHumanDate";
+import { successResponse } from "../helper/response";
+import getPaginationMeta from "../helper/metaPagination";
+import addMonths from "../helper/dates/addMonths";
 
 async function getAll(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const users = await UserModel.find()
-      .populate('gym_package', 'name')
-      .sort({ createdAt: -1 }); // newest first
+    const {
+      limit = 10,
+      page = 1,
+      name,
+    } = request.query as {
+      limit?: number;
+      page?: number;
+      name?: string;
+    };
 
-    const transformedUsers = users.map((user: any) => ({
-      ...user.toObject(),
-      joining_date: {
-        raw: user.joining_date,
-        formatted: formatHumanDate(user.joining_date, 'fullDateTime'),
-      },
-    }));
+    let filter:any = {};
 
-    reply.send({ users: transformedUsers });
+    if(name){
+      filter.name = {$regex: name, $options: 'i'}
+    }
+
+    const users = await UserModel.find(filter)
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .populate("gym_package", "name discount_price duration")
+      .sort({ createdAt: -1 });
+
+    const transformedUsers = users.map((user: any) => {
+      const userObj = user.toObject();
+      const discount_price = userObj?.gym_package?.discount_price;
+      const paid_fees = userObj?.paid_fees;
+
+      const joiningDate = new Date(userObj?.joining_date || new Date());
+      const durationInMonth = userObj?.gym_package?.duration || 0
+
+      const expiry_date = addMonths(joiningDate, durationInMonth);
+      const is_active = expiry_date > new Date();
+
+      return {
+        ...userObj,
+        joining_date: {
+          raw: joiningDate,
+          formatted: formatHumanDate(joiningDate, "fullDateTime"),
+        },
+        dob: {
+          raw: user.dob,
+          formatted: formatHumanDate(user.dob, "fullDateTime"),
+        },
+        remaining_fees: (discount_price || 0) - (paid_fees || 0),
+        expiry_date:{
+          raw : expiry_date,
+          formatted: formatHumanDate(expiry_date, "fullDateTime"),
+        },
+        is_active
+      };
+    });
+
+    const meta = await getPaginationMeta(UserModel, filter, page, limit);
+
+    successResponse("User fetch successfully.", transformedUsers, reply, meta, 200);
   } catch (err) {
     reply.status(500).send({ error: "Failed to fetch users", details: err });
   }
@@ -46,7 +91,7 @@ async function create(request: FastifyRequest, reply: FastifyReply) {
       paid_fees,
       joining_date,
       expiry_date,
-      role
+      role,
     } = fields;
 
     let isValid = await validateUser(fields, reply);
@@ -81,7 +126,7 @@ async function create(request: FastifyRequest, reply: FastifyReply) {
       paid_fees,
       joining_date,
       expiry_date,
-      role
+      role,
     });
 
     reply.status(201).send({
@@ -98,8 +143,7 @@ async function update(
   reply: FastifyReply
 ) {
   try {
-
-     if (!request.isMultipart()) {
+    if (!request.isMultipart()) {
       return reply
         .status(422)
         .send({ error: "Request must be multipart/form-data" });
@@ -129,23 +173,27 @@ async function update(
 
     const { id } = request.params;
 
-    const updatedUser = await UserModel.findByIdAndUpdate(id, {
-      name,
-      email,
-      contact,
-      dob,
-      address,
-      gender,
-      photo,
-      gym_package,
-      workout_package,
-      paid_fees,
-      joining_date,
-      expiry_date
-    }, {
-      new: true,
-      runValidators: true,
-    });
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      id,
+      {
+        name,
+        email,
+        contact,
+        dob,
+        address,
+        gender,
+        photo,
+        gym_package,
+        workout_package,
+        paid_fees,
+        joining_date,
+        expiry_date,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!updatedUser) {
       return reply.status(404).send({ error: "User not found" });
