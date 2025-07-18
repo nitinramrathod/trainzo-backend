@@ -3,6 +3,7 @@ import userController from "../../../../controllers/user.controller"
 
 const userRoutes: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get("/", userController.getAll);
+  fastify.get("/expiring", userController.getExpiringUsers);
   fastify.post("/", userController.create);
   fastify.put('/:id', userController.update);
   fastify.delete('/:id', userController.remove);

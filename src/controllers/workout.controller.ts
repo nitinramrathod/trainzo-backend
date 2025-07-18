@@ -18,14 +18,15 @@ async function getAll(request: FastifyRequest, reply: FastifyReply) {
       page?: number;
       name?: string;
     };
-
+    
+    const skip = (page - 1) * limit;
     let filter:any = {};
 
     if(name){
       filter.name = {$regex: name, $options: 'i'}
     }
 
-    const workouts = await WorkoutModel.find(filter).sort({ createdAt: -1 }); // newest first
+    const workouts = await WorkoutModel.find(filter).limit(limit).skip(skip).sort({ createdAt: -1 }); // newest first
     const meta = await getPaginationMeta(WorkoutModel, filter, page, limit);
     successResponse("Workouts fetched successfully.", workouts, reply, meta, 200);
   

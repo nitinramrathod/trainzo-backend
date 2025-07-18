@@ -19,10 +19,10 @@ async function getAll(request: FastifyRequest, reply: FastifyReply) {
       name?: string;
     };
 
-    let filter:any = {};
+    let filter: any = {};
 
-    if(name){
-      filter.name = {$regex: name, $options: 'i'}
+    if (name) {
+      filter.name = { $regex: name, $options: "i" };
     }
 
     const users = await UserModel.find(filter)
@@ -37,7 +37,7 @@ async function getAll(request: FastifyRequest, reply: FastifyReply) {
       const paid_fees = userObj?.paid_fees;
 
       const joiningDate = new Date(userObj?.joining_date || new Date());
-      const durationInMonth = userObj?.gym_package?.duration || 0
+      const durationInMonth = userObj?.gym_package?.duration || 0;
 
       const expiry_date = addMonths(joiningDate, durationInMonth);
       const is_active = expiry_date > new Date();
@@ -53,19 +53,149 @@ async function getAll(request: FastifyRequest, reply: FastifyReply) {
           formatted: formatHumanDate(user.dob, "fullDateTime"),
         },
         remaining_fees: (discount_price || 0) - (paid_fees || 0),
-        expiry_date:{
-          raw : expiry_date,
+        expiry_date: {
+          raw: expiry_date,
           formatted: formatHumanDate(expiry_date, "fullDateTime"),
         },
-        is_active
+        is_active,
       };
     });
 
     const meta = await getPaginationMeta(UserModel, filter, page, limit);
 
-    successResponse("User fetch successfully.", transformedUsers, reply, meta, 200);
+    successResponse(
+      "User fetch successfully.",
+      transformedUsers,
+      reply,
+      meta,
+      200
+    );
   } catch (err) {
     reply.status(500).send({ error: "Failed to fetch users", details: err });
+  }
+}
+
+async function getExpiringUsers(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      name,
+    } = request.query as {
+      page?: number;
+      name?: string;
+      limit?: number;
+    };
+
+    const skip = (page - 1) * limit;
+    const now = new Date();
+    let matchFilter: any = {};
+
+    if (name) {
+      matchFilter.name = { $regex: name, $options: "i" };
+    }
+
+     const aggregationPipeline:any[] = [
+      { $match: matchFilter },
+
+      {
+        $lookup: {
+          from: "memberships", // make sure this matches the actual collection name
+          localField: "gym_package",
+          foreignField: "_id",
+          as: "gym_package",
+        },
+      },
+      { $unwind: "$gym_package" },
+
+      {
+        $addFields: {
+          expiry_date: {
+            $dateAdd: {
+              startDate: "$joining_date",
+              unit: "month",
+              amount: "$gym_package.duration",
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          daysLeft: {
+            $ceil: {
+              $divide: [
+                { $subtract: ["$expiry_date", now] },
+                1000 * 60 * 60 * 24, // convert ms to days
+              ],
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          daysLeft: { $lte: 10 },
+        },
+      },
+      {
+        $facet: {
+          data: [
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $project: {
+                name: 1,
+                joining_date: 1,
+                expiry_date: 1,
+                daysLeft: 1,
+                "gym_package.name": 1,
+                "gym_package.duration": 1,
+              },
+            },
+          ],
+          totalCount: [{ $count: "count" }],
+        },
+      },
+    ];
+
+    const [result] = await UserModel.aggregate(aggregationPipeline);
+
+    const transformedUser = result?.data?.map((user:any)=>{
+      return{
+        ...user,
+        joining_date: {
+          raw: user.joining_date,
+          formatted: formatHumanDate(user.joining_date, 'fullDateTime') 
+        },
+        expiry_date: {
+          raw: user.expiry_date,
+          formatted: formatHumanDate(user.expiry_date, 'fullDateTime') 
+        }
+      }
+
+    })
+
+    const total_items = result?.totalCount?.[0]?.count || 0;
+    const total_pages = Math.ceil(total_items / limit);
+
+    successResponse(
+      "Expiring users fetched successfully.",
+      transformedUser,
+      reply,
+       {
+        total_items,
+        current_page: page,
+        total_pages,
+        first_page: 1,
+        last_page: total_pages,
+        limit
+      },
+      200
+    );
+  } catch (error) {
+    reply
+      .status(500)
+      .send({ error: "Failed to fetch expiring users", details: error });
   }
 }
 
@@ -249,4 +379,4 @@ async function getById(
   }
 }
 
-export default { create, remove, update, getAll, getById };
+export default { create, remove, update, getAll, getById, getExpiringUsers };
