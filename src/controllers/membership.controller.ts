@@ -2,13 +2,40 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import bodyParser from "../helper/common/bodyParser";
 import MembershipModel from "../models/membership.model";
 import { validateMembership } from "../validation-schema/membership.validation";
+import getPaginationMeta from "../helper/metaPagination";
+import { successResponse } from "../helper/response";
 
 async function getAll(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const memberships = await MembershipModel.find().sort({ createdAt: -1 }); // newest first
-    reply.send({ data: memberships });
+    const {
+      limit = 10,
+      page = 1,
+      name,
+    } = request.query as {
+      limit?: number;
+      page?: number;
+      name?: string;
+    };
+
+    let filter: any = {};
+
+    if (name) {
+      filter.name = { $regex: name, $options: "i" };
+    }
+
+    const memberships = await MembershipModel.find(filter)
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .sort({ createdAt: -1 }); // newest first
+
+
+    const meta = await getPaginationMeta(MembershipModel, filter, page, limit);
+    successResponse("Membership fetched successfully.", memberships, reply, meta, 200);
+  
   } catch (err) {
-    reply.status(500).send({ error: "Failed to fetch membership", details: err });
+    reply
+      .status(500)
+      .send({ error: "Failed to fetch membership", details: err });
   }
 }
 
@@ -21,13 +48,7 @@ async function create(request: FastifyRequest, reply: FastifyReply) {
     }
     const fields = await bodyParser(request);
 
-    const {
-      name,
-      description,
-      duration,
-      price,
-      discount_price
-    } = fields;
+    const { name, description, duration, price, discount_price } = fields;
 
     let isValid = await validateMembership(fields, reply);
 
@@ -53,7 +74,7 @@ async function create(request: FastifyRequest, reply: FastifyReply) {
       description,
       duration,
       price,
-      discount_price
+      discount_price,
     });
 
     reply.status(201).send({
@@ -70,21 +91,14 @@ async function update(
   reply: FastifyReply
 ) {
   try {
-
-     if (!request.isMultipart()) {
+    if (!request.isMultipart()) {
       return reply
         .status(422)
         .send({ error: "Request must be multipart/form-data" });
     }
     const fields = await bodyParser(request);
 
-    const {
-      name,
-      description,
-      duration,
-      price,
-      discount_price
-    } = fields;
+    const { name, description, duration, price, discount_price } = fields;
 
     let isValid = await validateMembership(fields, reply);
 
@@ -94,16 +108,20 @@ async function update(
 
     const { id } = request.params;
 
-    const updatedMembership = await MembershipModel.findByIdAndUpdate(id, {
-      name,
-      description,
-      duration,
-      price,
-      discount_price
-    }, {
-      new: true,
-      runValidators: true,
-    });
+    const updatedMembership = await MembershipModel.findByIdAndUpdate(
+      id,
+      {
+        name,
+        description,
+        duration,
+        price,
+        discount_price,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!updatedMembership) {
       return reply.status(404).send({ error: "Membership not found" });
@@ -114,7 +132,9 @@ async function update(
       membership: updatedMembership,
     });
   } catch (err) {
-    reply.status(500).send({ error: "Failed to update membership", details: err });
+    reply
+      .status(500)
+      .send({ error: "Failed to update membership", details: err });
   }
 }
 
@@ -136,7 +156,9 @@ async function remove(
       user: deletedMembership,
     });
   } catch (err) {
-    reply.status(500).send({ error: "Failed to delete membership", details: err });
+    reply
+      .status(500)
+      .send({ error: "Failed to delete membership", details: err });
   }
 }
 
@@ -155,7 +177,9 @@ async function getById(
 
     reply.status(200).send({ membership });
   } catch (err) {
-    reply.status(500).send({ error: "Failed to fetch membership", details: err });
+    reply
+      .status(500)
+      .send({ error: "Failed to fetch membership", details: err });
   }
 }
 

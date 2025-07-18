@@ -3,11 +3,32 @@ import bodyParser from "../helper/common/bodyParser";
 import WorkoutModel from "../models/workout.model";
 import { validateMembership } from "../validation-schema/membership.validation";
 import { validateWorkout } from "../validation-schema/workout.validation";
+import getPaginationMeta from "../helper/metaPagination";
+import { successResponse } from "../helper/response";
 
 async function getAll(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const workouts = await WorkoutModel.find().sort({ createdAt: -1 }); // newest first
-    reply.send({ data:workouts });
+
+      const {
+      limit = 10,
+      page = 1,
+      name,
+    } = request.query as {
+      limit?: number;
+      page?: number;
+      name?: string;
+    };
+
+    let filter:any = {};
+
+    if(name){
+      filter.name = {$regex: name, $options: 'i'}
+    }
+
+    const workouts = await WorkoutModel.find(filter).sort({ createdAt: -1 }); // newest first
+    const meta = await getPaginationMeta(WorkoutModel, filter, page, limit);
+    successResponse("Workouts fetched successfully.", workouts, reply, meta, 200);
+  
   } catch (err) {
     reply.status(500).send({ error: "Failed to fetch workouts", details: err });
   }
