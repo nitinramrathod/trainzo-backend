@@ -1,7 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import bodyParser from "../helper/common/bodyParser";
-import WorkoutModel from "../models/workout.model";
-import { validateMembership } from "../validation-schema/membership.validation";
 import { validateWorkout } from "../validation-schema/workout.validation";
 import WorkoutPlanModel from "../models/workout-plan.model";
 import { validateWorkoutPlan } from "../validation-schema/workout-plan.validation";
@@ -99,7 +97,7 @@ async function update(
 
     const { id } = request.params;
 
-    const updatedWorkout = await WorkoutModel.findByIdAndUpdate(id, {
+    const updatedWorkout = await WorkoutPlanModel.findByIdAndUpdate(id, {
       name,
       description,
       video_iframe
@@ -128,7 +126,7 @@ async function remove(
   const { id } = request.params;
 
   try {
-    const deletedWorkout = await WorkoutModel.findByIdAndDelete(id);
+    const deletedWorkout = await WorkoutPlanModel.findByIdAndDelete(id);
 
     if (!deletedWorkout) {
       return reply.status(404).send({ error: "Workout not found" });
@@ -150,7 +148,7 @@ async function getById(
   const { id } = request.params;
 
   try {
-    const workout = await WorkoutModel.findById(id);
+    const workout = await WorkoutPlanModel.findById(id);
 
     if (!workout) {
       return reply.status(404).send({ error: "Workout not found" });

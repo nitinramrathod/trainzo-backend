@@ -6,6 +6,7 @@ import { formatHumanDate } from "../helper/formatHumanDate";
 import { successResponse } from "../helper/response";
 import getPaginationMeta from "../helper/metaPagination";
 import addMonths from "../helper/dates/addMonths";
+import { IUserResponse } from "../types/user.interface";
 
 async function getAll(request: FastifyRequest, reply: FastifyReply) {
   try {
@@ -373,7 +374,17 @@ async function getById(
       return reply.status(404).send({ error: "User not found" });
     }
 
-    reply.status(200).send({ user });
+    const userRaw = user.toObject();
+
+    const userObj: IUserResponse = {
+      ...userRaw,
+      _id: (userRaw._id as string | { toString(): string }).toString(),
+      dob: userRaw.dob ? formatHumanDate(userRaw.dob, 'numericDash') : undefined,
+      joining_date: userRaw.joining_date ? formatHumanDate(userRaw.joining_date, 'numericDash') : undefined,
+      expiry_date: userRaw.expiry_date ? formatHumanDate(userRaw.expiry_date, 'numericDash') : undefined
+    };
+
+    reply.status(200).send({ data: userObj });
   } catch (err) {
     reply.status(500).send({ error: "Failed to fetch user", details: err });
   }

@@ -1,4 +1,4 @@
-export type HumanDateFormatType = 'short' | 'medium' | 'long' | 'withTime' | 'fullDateTime';
+export type HumanDateFormatType = 'short' | 'medium' | 'long' | 'withTime' | 'fullDateTime' | 'numericDash';
 
 /**
  * Converts a Date into a human-readable format.
@@ -15,7 +15,14 @@ export function formatHumanDate(
 
   if (isNaN(d.getTime())) return 'Invalid Date';
 
-  const options: Record<HumanDateFormatType, Intl.DateTimeFormatOptions> = {
+    if (format === 'numericDash') {
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${year}-${month}-${day}`; // 2025-10-19
+  }
+
+  const options: Record<Exclude<HumanDateFormatType, 'numericDash'>, Intl.DateTimeFormatOptions> = {
     short: { year: '2-digit', month: '2-digit', day: '2-digit' },               // 17/07/25
     medium: { year: 'numeric', month: 'short', day: 'numeric' },                // Jul 17, 2025
     long: {

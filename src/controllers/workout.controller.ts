@@ -162,7 +162,7 @@ async function getById(
       return reply.status(404).send({ error: "Workout not found" });
     }
 
-    reply.status(200).send({ workout });
+    reply.status(200).send({ data:workout });
   } catch (err) {
     reply.status(500).send({ error: "Failed to fetch workout", details: err });
   }

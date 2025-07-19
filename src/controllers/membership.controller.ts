@@ -175,7 +175,7 @@ async function getById(
       return reply.status(404).send({ error: "membership not found" });
     }
 
-    reply.status(200).send({ membership });
+    reply.status(200).send({ data: membership });
   } catch (err) {
     reply
       .status(500)
