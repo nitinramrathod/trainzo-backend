@@ -47,16 +47,16 @@ async function getAll(request: FastifyRequest, reply: FastifyReply) {
         ...userObj,
         joining_date: {
           raw: joiningDate,
-          formatted: formatHumanDate(joiningDate, "fullDateTime"),
+          formatted: formatHumanDate(joiningDate, "long"),
         },
         dob: {
           raw: user.dob,
-          formatted: formatHumanDate(user.dob, "fullDateTime"),
+          formatted: formatHumanDate(user.dob, "long"),
         },
         remaining_fees: (discount_price || 0) - (paid_fees || 0),
         expiry_date: {
           raw: expiry_date,
-          formatted: formatHumanDate(expiry_date, "fullDateTime"),
+          formatted: formatHumanDate(expiry_date, "long"),
         },
         is_active,
       };

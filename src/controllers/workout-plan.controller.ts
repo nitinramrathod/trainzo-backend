@@ -35,12 +35,18 @@ async function getAll(request: FastifyRequest, reply: FastifyReply) {
 
 async function create(request: FastifyRequest, reply: FastifyReply) {
   try {
-    if (!request.isMultipart()) {
-      return reply
-        .status(422)
-        .send({ error: "Request must be multipart/form-data" });
-    }
-    const fields = await bodyParser(request);
+    // if (!request.isMultipart()) {
+    //   return reply
+    //     .status(422)
+    //     .send({ error: "Request must be multipart/form-data" });
+    // }
+    // const fields = await bodyParser(request);
+    const fields = await request?.body as {
+      name: string;
+      description: string;
+      days: any;
+      workouts?: any;
+    };
 
     const {
       name,
@@ -151,12 +157,12 @@ async function getById(
     const workout = await WorkoutPlanModel.findById(id);
 
     if (!workout) {
-      return reply.status(404).send({ error: "Workout not found" });
+      return reply.status(404).send({ error: "Workout plan not found" });
     }
 
-    reply.status(200).send({ workout });
+    reply.status(200).send({ data: workout });
   } catch (err) {
-    reply.status(500).send({ error: "Failed to fetch workout", details: err });
+    reply.status(500).send({ error: "Failed to fetch workout plan", details: err });
   }
 }
 

@@ -15,7 +15,7 @@ const workoutPlanValidationSchema = Joi.object({
           sets: Joi.string().required(),
           gap: Joi.string().optional(),
           repetition: Joi.string().required(),
-        })
+        }).unknown(true)
       ).required()
     })
   ).required()
