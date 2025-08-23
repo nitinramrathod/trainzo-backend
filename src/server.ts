@@ -5,10 +5,12 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const server = fastify({ logger: true });
+const port:number = Number(process.env.PORT) || 3001;
+const host:string = process.env.HOST || '0.0.0.0';
 
 server.register(App);
 
-server.listen({ port: 3030 }, (err, address) => {
+server.listen({ port,  host }, (err, address) => {
   if (err) {
     server.log.error(err);
     process.exit(1);
