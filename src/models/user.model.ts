@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
 import { IUser } from '../types/user.interface';
-import { number } from 'joi';
+import bcrypt from 'bcryptjs';
 
 const userSchema = new Schema<IUser>(
   {
@@ -27,6 +27,23 @@ const userSchema = new Schema<IUser>(
   },
   { timestamps: true }
 );
+
+userSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password as string, salt);
+        next();
+    } catch (err) {
+        next(err as any);
+    }
+});
+
+userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+  console.log("Candidate:", candidatePassword);
+    console.log("Hashed Password:", this.password);
+    return bcrypt.compare(candidatePassword, this.password);
+};
 
 const UserModel = model<IUser>('user', userSchema);
 

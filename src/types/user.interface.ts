@@ -12,6 +12,7 @@ export interface IUser extends Document {
   password?: string;
   gym_package?: string;
   workout_package?: string;
+  comparePassword: (candidatePassword: string) => Promise<boolean>;
   paid_fees?: number;
   joining_date?: Date;
   expiry_date?: Date;

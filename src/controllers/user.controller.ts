@@ -223,6 +223,7 @@ async function create(request: FastifyRequest, reply: FastifyReply) {
       joining_date,
       expiry_date,
       role,
+      password
     } = fields;
 
     let isValid = await validateUser(fields, reply);
@@ -258,6 +259,7 @@ async function create(request: FastifyRequest, reply: FastifyReply) {
       joining_date,
       expiry_date,
       role,
+      password
     });
 
     reply.status(201).send({
