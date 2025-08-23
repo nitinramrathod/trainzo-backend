@@ -4,7 +4,7 @@ import handleValidationError from "../helper/validation/validationErrorMessage";
 
 const userSchema = Joi.object({
   name: Joi.string().required(),
-  email: Joi.string().email().required(),
+  email: Joi.string().email(),
   contact: Joi.string()
       .required()
       .pattern(/^\d+$/)
@@ -23,19 +23,16 @@ const userSchema = Joi.object({
       .iso()
       .empty("")
       .max("now")
-      .required()
       .messages({
         "date.base": "Date of birth must be a valid date in ISO format",
         "date.format": "Date of birth should be in format",
         "date.max": "Date of birth cannot be a future date",
-        "any.required": "Joining date is required",
       }),
-  address: Joi.string().required(),
+  address: Joi.string(),
   gender: Joi.string().valid("male", "female", "other").required(),
   role: Joi.string().valid("admin", "user", "trainer").required(),
   photo: Joi.string().optional(),
   joining_date: Joi.date().optional(),
-  expiry_date: Joi.date().optional(),
   gym_package: Joi.string().required(),
   workout_package: Joi.string().optional(),
   paid_fees: Joi.number().optional(),

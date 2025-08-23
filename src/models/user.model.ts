@@ -8,18 +8,20 @@ const userSchema = new Schema<IUser>(
     email: { type: String },
     contact: { type: String, required: true },
     dob: { type: Date },
-    address: { type: String, required: true },
+    address: { type: String },
     gender: { type: String, required: true },
     role: { type: String, required: true },
     photo: { type: String },
     joining_date: { type: Date },
-    expiry_date: { type: Date },
     gym_package: {
       type: Schema.Types.ObjectId,
       ref: "membership",
       required: true,
     },
-    workout_package: { type: Date },
+    workout_package: { 
+      type: Schema.Types.ObjectId,
+      ref: "workoutPlan"
+    },
     password:{type: String},
     paid_fees: { type: Number }
   },
