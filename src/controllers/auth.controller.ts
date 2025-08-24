@@ -42,8 +42,8 @@ export async function login(
     reply
       .setCookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        secure: true,
+        sameSite: "none",
         path: "/",
       })
       .status(200)
