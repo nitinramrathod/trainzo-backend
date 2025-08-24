@@ -24,7 +24,7 @@ export async function login(
     const user = await UserModel.findOne({ email });
 
     if (!user || !(await user.comparePassword(password))) {
-      return reply.status(404).send({ error: "Email or password is incorrect" });
+      return reply.status(404).send({errors:{ password: "Email or password is incorrect" }});
     }
 
     // Generate JWT token
