@@ -22,13 +22,7 @@ const userRoutes: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   );
 
-  fastify.get<{ Params: { id: string } }>(
-    "/:id",
-    { preHandler: fastify.authenticate },
-    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      return userController.getById(request, reply);
-    }
-  );
+  fastify.get<{ Params: { id: string } }>("/:id",userController.getById);
 };
 
 export default userRoutes;

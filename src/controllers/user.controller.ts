@@ -223,7 +223,7 @@ async function create(request: FastifyRequest, reply: FastifyReply) {
       joining_date,
       expiry_date,
       role,
-      password
+      password='123456'
     } = fields;
 
     let isValid = await validateUser(fields, reply);
@@ -296,6 +296,7 @@ async function update(
       paid_fees,
       joining_date,
       expiry_date,
+      password='123456'
     } = fields;
 
     let isValid = await validateUser(fields, reply);
@@ -321,6 +322,7 @@ async function update(
         paid_fees,
         joining_date,
         expiry_date,
+        password,
       },
       {
         new: true,

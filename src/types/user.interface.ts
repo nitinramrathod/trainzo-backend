@@ -9,7 +9,7 @@ export interface IUser extends Document {
   gender: string;
   role: string;
   photo?: string;
-  password?: string;
+  password?: string | undefined | null | "";
   gym_package?: string;
   workout_package?: string;
   comparePassword: (candidatePassword: string) => Promise<boolean>;

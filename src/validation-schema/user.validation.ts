@@ -32,6 +32,7 @@ const userSchema = Joi.object({
   gender: Joi.string().valid("male", "female", "other").required(),
   role: Joi.string().valid("admin", "user", "trainer").required(),
   photo: Joi.string().optional(),
+  password: Joi.string().optional(),
   joining_date: Joi.date().optional(),
   gym_package: Joi.string().required(),
   workout_package: Joi.string().optional(),
