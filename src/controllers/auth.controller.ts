@@ -36,19 +36,12 @@ export async function login(
     const token = await reply.jwtSign(
       { userId: user._id, email: user.email },
       { expiresIn: "48h" }
-    );
+    );    
 
-    // Set token in HTTP-only cookie
-    reply
-      .setCookie("token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        path: "/",
-      })
-      .status(200)
+      reply.status(200)
       .send({
         message: "Login successful",
+        token,
         user: {
           id: user._id,
           name: user.name,
