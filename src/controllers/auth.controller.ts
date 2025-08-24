@@ -23,18 +23,13 @@ export async function login(
     const { email, password } = fields;
 
     if (!email || !password) {
-      return reply
-        .status(400)
-        .send({ error: "Email and password are required" });
+      return reply.status(400).send({ error: "Email and password are required" });
     }
 
     const user = await UserModel.findOne({ email });
 
-    // Check if user exists and password matches
     if (!user || !(await user.comparePassword(password))) {
-      return reply
-        .status(404)
-        .send({ error: "Email or password is incorrect" });
+      return reply.status(404).send({ error: "Email or password is incorrect" });
     }
 
     // Generate JWT token
@@ -43,15 +38,24 @@ export async function login(
       { expiresIn: "48h" }
     );
 
-    reply.status(200).send({
-      message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
-    });
+    // Set token in HTTP-only cookie
+    reply
+      .setCookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+      })
+      .status(200)
+      .send({
+        message: "Login successful",
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+        },
+      });
+
   } catch (err) {
     reply.status(500).send({ error: "Failed to login", details: err });
   }
