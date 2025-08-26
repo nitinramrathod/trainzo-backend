@@ -28,7 +28,7 @@ const userSchema = Joi.object({
         "date.format": "Date of birth should be in format",
         "date.max": "Date of birth cannot be a future date",
       }),
-  address: Joi.string(),
+  address: Joi.string().optional(),
   gender: Joi.string().valid("male", "female", "other").required(),
   role: Joi.string().valid("admin", "user", "trainer").required(),
   photo: Joi.string().optional(),

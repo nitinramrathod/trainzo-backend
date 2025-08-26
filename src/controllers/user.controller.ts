@@ -207,7 +207,7 @@ async function create(request: FastifyRequest, reply: FastifyReply) {
         .status(422)
         .send({ error: "Request must be multipart/form-data" });
     }
-    const fields = await bodyParser(request);
+    const fields:any = await bodyParser(request);
 
     const {
       name,
@@ -232,17 +232,13 @@ async function create(request: FastifyRequest, reply: FastifyReply) {
       return;
     }
 
-    if (!name || !email || !contact) {
-      return reply
-        .status(400)
-        .send({ error: "name, email, and contact are required" });
-    }
-
-    const existing = await UserModel.findOne({ email });
-    if (existing) {
+    if(email){
+      const existing = await UserModel.findOne({ email });
+      if (existing) {
       return reply
         .status(409)
         .send({ error: "User with this email already exists" });
+      }
     }
 
     const user = await UserModel.create({

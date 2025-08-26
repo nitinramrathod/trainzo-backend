@@ -33,9 +33,14 @@ async function dashboardStats(request: FastifyRequest, reply: FastifyReply) {
               },
               remainingFee: {
                 $max: [
-                  { $subtract: ["$gym_package.discount_price", "$paid_fees"] },
-                  0,
-                ],
+                  {
+                    $subtract: [
+                      { $ifNull: ["$gym_package.discount_price", 0] },
+                      { $ifNull: ["$paid_fees", 0] }
+                    ]
+                  },
+                  0
+                ]
               },
             },
           },
