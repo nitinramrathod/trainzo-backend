@@ -1,5 +1,6 @@
 // const saveFile = require("../imageStorage");
 import { FastifyRequest } from "fastify";
+import uploadCloudinary from "../../utils/uploadCloudinary";
 
 type ParsedFields = Record<string, any>;
 
@@ -9,8 +10,13 @@ const bodyParser = async (request:FastifyRequest):Promise<ParsedFields> => {
 
     for await (const part of parts) {
         if (part.type === 'file') {
-            // fields[part.fieldname] = await saveFile(part);
-            fields[part.fieldname] = 'dummy/folder/path';
+            try {
+                
+                fields[part.fieldname] = await uploadCloudinary(part);
+            } catch (error) {
+                console.log('saving to cloudinary error==>', error)
+                
+            }
         } else {
             try {
                 if (fields[part.fieldname] === "workouts") {

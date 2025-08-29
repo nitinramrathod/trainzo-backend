@@ -226,6 +226,7 @@ async function create(request: FastifyRequest, reply: FastifyReply) {
       password='123456'
     } = fields;
 
+    console.log('fields===>', fields)
     let isValid = await validateUser(fields, reply);
 
     if (isValid) {
