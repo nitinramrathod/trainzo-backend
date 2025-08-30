@@ -236,7 +236,7 @@ async function create(request: FastifyRequest, reply: FastifyReply) {
       joining_date,
       expiry_date,
       role,
-      password='123456'
+      password
     } = fields;
 
     console.log('fields===>', fields)
@@ -281,6 +281,79 @@ async function create(request: FastifyRequest, reply: FastifyReply) {
   }
 }
 
+// async function update(
+//   request: FastifyRequest<{ Params: { id: string } }>,
+//   reply: FastifyReply
+// ) {
+//   try {
+//     if (!request.isMultipart()) {
+//       return reply
+//         .status(422)
+//         .send({ error: "Request must be multipart/form-data" });
+//     }
+//     const fields = await bodyParser(request);
+
+//     const {
+//       name,
+//       email,
+//       contact,
+//       dob,
+//       address,
+//       gender,
+//       photo,
+//       gym_package,
+//       workout_package,
+//       paid_fees,
+//       role,
+//       joining_date,
+//       expiry_date,
+//       password='123456'
+//     } = fields;
+
+//     let isValid = await validateUser(fields, reply);
+
+//     if (isValid) {
+//       return;
+//     }
+
+//     const { id } = request.params;
+
+//     const updatedUser = await UserModel.findByIdAndUpdate(
+//       id,
+//       {
+//         name,
+//         email,
+//         contact,
+//         dob,
+//         address,
+//         gender,
+//         photo,
+//         role,
+//         gym_package,
+//         workout_package,
+//         paid_fees,
+//         joining_date,
+//         expiry_date,
+//         password,
+//       },
+//       {
+//         new: true,
+//         runValidators: true,
+//       }
+//     );
+
+//     if (!updatedUser) {
+//       return reply.status(404).send({ error: "User not found" });
+//     }
+
+//     reply.status(200).send({
+//       message: "User updated successfully",
+//       user: updatedUser,
+//     });
+//   } catch (err) {
+//     reply.status(500).send({ error: "Failed to update user", details: err });
+//   }
+// }
 async function update(
   request: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply
@@ -291,64 +364,61 @@ async function update(
         .status(422)
         .send({ error: "Request must be multipart/form-data" });
     }
+
     const fields = await bodyParser(request);
 
-    const {
-      name,
-      email,
-      contact,
-      dob,
-      address,
-      gender,
-      photo,
-      gym_package,
-      workout_package,
-      paid_fees,
-      role,
-      joining_date,
-      expiry_date,
-      password='123456'
-    } = fields;
-
+    // Validate only required fields if needed
     let isValid = await validateUser(fields, reply);
-
     if (isValid) {
       return;
     }
 
     const { id } = request.params;
 
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      id,
-      {
-        name,
-        email,
-        contact,
-        dob,
-        address,
-        gender,
-        photo,
-        role,
-        gym_package,
-        workout_package,
-        paid_fees,
-        joining_date,
-        expiry_date,
-        password,
-      },
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    // Build update object dynamically
+    const updatableFields = [
+      "name",
+      "email",
+      "contact",
+      "dob",
+      "address",
+      "gender",
+      "photo",
+      "role",
+      "gym_package",
+      "workout_package",
+      "paid_fees",
+      "joining_date",
+      "expiry_date",
+      "password",
+    ];
 
-    if (!updatedUser) {
+    const updateData: Record<string, any> = {};
+    for (const key of updatableFields) {
+      if (fields[key] !== undefined && fields[key] !== "") {
+        updateData[key] = fields[key];
+      }
+    }
+
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return reply.status(404).send({ error: "User not found" });
+    }
+
+    // Only update fields present
+    for (const key of Object.keys(updateData)) {
+      (user as any)[key] = updateData[key];
+    }
+
+    await user.save();
+
+    if (!user) {
       return reply.status(404).send({ error: "User not found" });
     }
 
     reply.status(200).send({
       message: "User updated successfully",
-      user: updatedUser,
+      user: user,
     });
   } catch (err) {
     reply.status(500).send({ error: "Failed to update user", details: err });

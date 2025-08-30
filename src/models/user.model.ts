@@ -31,7 +31,8 @@ const userSchema = new Schema<IUser>(
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
     try {
-        const salt = await bcrypt.genSalt(10);
+      if(!this.password)return;
+        const salt = await bcrypt.genSalt(12);
         this.password = await bcrypt.hash(this.password as string, salt);
         next();
     } catch (err) {
@@ -40,9 +41,7 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
-  console.log("Candidate:", candidatePassword);
-    console.log("Hashed Password:", this.password);
-    return bcrypt.compare(candidatePassword, this.password);
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
 const UserModel = model<IUser>('user', userSchema);
