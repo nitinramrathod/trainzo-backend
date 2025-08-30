@@ -7,6 +7,7 @@ import { successResponse } from "../helper/response";
 import getPaginationMeta from "../helper/metaPagination";
 import addMonths from "../helper/dates/addMonths";
 import { IUserResponse } from "../types/user.interface";
+import { regexFilter } from "../utils/regexFilter";
 
 async function getAll(request: FastifyRequest, reply: FastifyReply) {
   try {
@@ -14,17 +15,27 @@ async function getAll(request: FastifyRequest, reply: FastifyReply) {
       limit = 10,
       page = 1,
       name,
+      contact,
+      role,
+      gender,
+      gym_package
     } = request.query as {
       limit?: number;
       page?: number;
       name?: string;
+      contact?: string;
+      role?: string;
+      gender?: string;
+      gym_package?: string;
     };
 
     let filter: any = {};
 
-    if (name) {
-      filter.name = { $regex: name, $options: "i" };
-    }
+    regexFilter("gender", gender, filter);
+    regexFilter("contact", contact, filter);
+    regexFilter("role", role, filter);
+    regexFilter("name", name, filter);
+    regexFilter("gym_package", gym_package, filter);
 
     const users = await UserModel.find(filter)
       .limit(limit)
