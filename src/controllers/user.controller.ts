@@ -95,12 +95,12 @@ async function getExpiringUsers(request: FastifyRequest, reply: FastifyReply) {
       limit = 10,
       name,
     } = request.query as {
-      page?: number;
+      page?: string;
       name?: string;
-      limit?: number;
+      limit?: string;
     };
 
-    const skip = (page - 1) * limit;
+    const skip = (Number(page) - 1) * Number(limit);
     const now = new Date();
     let matchFilter: any = {};
 
@@ -108,7 +108,7 @@ async function getExpiringUsers(request: FastifyRequest, reply: FastifyReply) {
       matchFilter.name = { $regex: name, $options: "i" };
     }
 
-     const aggregationPipeline:any[] = [
+    const aggregationPipeline:any[] = [
       { $match: matchFilter },
 
       {
@@ -154,7 +154,7 @@ async function getExpiringUsers(request: FastifyRequest, reply: FastifyReply) {
           data: [
             { $sort: { createdAt: -1 } },
             { $skip: skip },
-            { $limit: limit },
+            { $limit: Number(limit) },
             {
               $project: {
                 name: 1,
@@ -190,7 +190,7 @@ async function getExpiringUsers(request: FastifyRequest, reply: FastifyReply) {
     })
 
     const total_items = result?.totalCount?.[0]?.count || 0;
-    const total_pages = Math.ceil(total_items / limit);
+    const total_pages = Math.ceil(total_items / Number(limit));
 
     successResponse(
       "Expiring users fetched successfully.",
