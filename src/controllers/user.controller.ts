@@ -38,6 +38,7 @@ async function getAll(request: FastifyRequest, reply: FastifyReply) {
     regexFilter("gym_package", gym_package, filter);
 
     const users = await UserModel.find(filter)
+      .select("-password")
       .limit(limit)
       .skip((page - 1) * limit)
       .populate("gym_package", "name discount_price duration")
@@ -160,6 +161,7 @@ async function getExpiringUsers(request: FastifyRequest, reply: FastifyReply) {
                 joining_date: 1,
                 expiry_date: 1,
                 daysLeft: 1,
+                photo:1,
                 "gym_package.name": 1,
                 "gym_package.duration": 1,
               },
@@ -177,11 +179,11 @@ async function getExpiringUsers(request: FastifyRequest, reply: FastifyReply) {
         ...user,
         joining_date: {
           raw: user.joining_date,
-          formatted: formatHumanDate(user.joining_date, 'fullDateTime') 
+          formatted: formatHumanDate(user.joining_date, 'long') 
         },
         expiry_date: {
           raw: user.expiry_date,
-          formatted: formatHumanDate(user.expiry_date, 'fullDateTime') 
+          formatted: formatHumanDate(user.expiry_date, 'long') 
         }
       }
 
