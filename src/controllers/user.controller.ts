@@ -304,6 +304,7 @@ async function update(
       gym_package,
       workout_package,
       paid_fees,
+      role,
       joining_date,
       expiry_date,
       password='123456'
@@ -327,6 +328,7 @@ async function update(
         address,
         gender,
         photo,
+        role,
         gym_package,
         workout_package,
         paid_fees,
@@ -382,7 +384,7 @@ async function getById(
   const { id } = request.params;
 
   try {
-    const user = await UserModel.findById(id);
+    const user = await UserModel.findById(id).select('-password');
 
     if (!user) {
       return reply.status(404).send({ error: "User not found" });

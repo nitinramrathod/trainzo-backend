@@ -59,6 +59,7 @@ async function dashboardStats(request: FastifyRequest, reply: FastifyReply) {
                   $match: {
                     updatedAt: { $gte: firstDayOfMonth },
                     paid_fees: { $gt: 0 },
+                    role: { $nin: ["admin", "trainer"] }
                   },
                 },
                 { $group: { _id: null, total: { $sum: "$paid_fees" } } },
@@ -71,8 +72,10 @@ async function dashboardStats(request: FastifyRequest, reply: FastifyReply) {
                 { $count: "count" },
               ],
 
-              remainingFees: [
-                { $match: { expiry_date: { $gte: now } } },
+              remainingFees: [{ 
+                  $match: { expiry_date: { $gte: now },
+                  role: { $nin: ["admin", "trainer"]}
+                }, },
                 {
                   $group: { _id: null, total: { $sum: "$remainingFee" } },
                 },
